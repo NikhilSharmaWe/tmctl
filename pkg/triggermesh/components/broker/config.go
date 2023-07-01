@@ -74,6 +74,7 @@ func (t *Trigger) WriteLocalConfig() error {
 			URL:       t.LocalURL.String(),
 			Component: t.Target.Ref.Name,
 		}
+		fmt.Println("if exists WriteLocalConfig:", t.LocalURL.String())
 		configuration.Triggers[t.Name] = trigger
 	} else {
 		if configuration.Triggers == nil {
@@ -86,7 +87,9 @@ func (t *Trigger) WriteLocalConfig() error {
 				Component: t.Target.Ref.Name,
 			},
 		}
+		fmt.Println("if not exists WriteLocalConfig:", t.LocalURL.String())
 	}
+	fmt.Println("Configuration", configuration)
 	return writeBrokerConfig(configFile, &configuration)
 }
 

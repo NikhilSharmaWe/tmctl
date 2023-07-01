@@ -121,11 +121,24 @@ func NewTrigger(name, broker, configBase string, target triggermesh.Component, f
 	}
 
 	if target != nil {
+		var u string
+		var uri *apis.URL
+		var err error
+		spec := target.GetSpec()
+		_, ok := spec["URI"]
+		if ok {
+			u = spec["URI"].(string)
+			uri, err = apis.ParseURL(u)
+			if err != nil {
+				fmt.Println("Nikhil Sharma Error")
+			}
+		}
+
 		targetPort, err := target.(triggermesh.Consumer).GetPort(context.Background())
 		if err != nil {
 			return nil, fmt.Errorf("target local port: %w", err)
 		}
-		trigger.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s", dockerHost, targetPort))
+		trigger.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s%s", dockerHost, targetPort, u))
 		if err != nil {
 			return nil, fmt.Errorf("target local URL: %w", err)
 		}
@@ -135,7 +148,15 @@ func NewTrigger(name, broker, configBase string, target triggermesh.Component, f
 				Name:       target.GetName(),
 				APIVersion: target.GetAPIVersion(),
 			},
+			URI: uri,
 		}
+		fmt.Println("uri is absolute: ", uri.URL().IsAbs())
+		uu, err := apis.ParseURL(fmt.Sprintf("%s:%s%s", dockerHost, targetPort, uri))
+		if err != nil {
+			return nil, fmt.Errorf("target local URL: %w", err)
+		}
+		fmt.Println("example is absolute: ", uu.URL().IsAbs())
+		fmt.Println(trigger.Target.URI)
 	}
 
 	if filter != nil {
@@ -145,6 +166,7 @@ func NewTrigger(name, broker, configBase string, target triggermesh.Component, f
 }
 
 func (t *Trigger) SetTarget(target triggermesh.Component) {
+	// need to add the URI here to, since it is used in case of restart/update
 	t.Target = duckv1.Destination{
 		Ref: &duckv1.KReference{
 			Kind:       target.GetKind(),
