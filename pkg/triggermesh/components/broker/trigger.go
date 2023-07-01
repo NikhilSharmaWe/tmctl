@@ -101,7 +101,7 @@ func (t *Trigger) SetSpec(spec map[string]interface{}) {
 }
 
 func NewTrigger(name, broker, configBase string, target triggermesh.Component, filter *eventingbroker.Filter) (triggermesh.Component, error) {
-	fmt.Println("Hello")
+	// fmt.Println("Hello")
 	trigger := &Trigger{
 		Name:       name,
 		ConfigBase: configBase,
@@ -139,16 +139,18 @@ func NewTrigger(name, broker, configBase string, target triggermesh.Component, f
 		if err != nil {
 			return nil, fmt.Errorf("target local URL: %w", err)
 		}
+		fmt.Println("Change trigger.LocalURL", trigger.LocalURL)
 		trigger.Target = duckv1.Destination{
-			Ref: &duckv1.KReference{
-				Kind:       target.GetKind(),
-				Name:       target.GetName(),
-				APIVersion: target.GetAPIVersion(),
-			},
+			// Ref: &duckv1.KReference{
+			// 	Kind:       target.GetKind(),
+			// 	Name:       target.GetName(),
+			// 	APIVersion: target.GetAPIVersion(),
+			// },
+			URI: trigger.LocalURL,
 		}
 	}
 
-	fmt.Println("in NewTrigger()", trigger.LocalURL)
+	// fmt.Println("in NewTrigger()", trigger.LocalURL)
 
 	if filter != nil {
 		trigger.Filters = []eventingbroker.Filter{*filter}
@@ -164,14 +166,20 @@ func (t *Trigger) SetTarget(target triggermesh.Component) {
 			APIVersion: target.GetAPIVersion(),
 		},
 	}
-	spec := t.GetSpec()
-	fmt.Println("----------------------------------------------njknbibibhbhb", spec)
+	var uri string
+	spec := target.GetSpec()
+	_, ok := spec["URI"]
+	if ok {
+		uri = spec["URI"].(string)
+	}
+
+	// fmt.Println("----------------------------------------------njknbibibhbhb", spec)
 	if consumer, ok := target.(triggermesh.Consumer); ok {
 		port, err := consumer.GetPort(context.Background())
 		if err != nil {
 			return
 		}
-		t.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s", dockerHost, port))
+		t.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s%s", dockerHost, port, uri))
 		if err != nil {
 			return
 		}
@@ -187,6 +195,7 @@ func (t *Trigger) LookupTarget() {
 	if !exists {
 		return
 	}
+	// fmt.Println("LookupTarget()", localTrigger.Target.URL)
 	if url, _ := apis.ParseURL(localTrigger.Target.URL); url != nil {
 		t.LocalURL = url
 	}
