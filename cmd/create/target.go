@@ -38,7 +38,7 @@ import (
 
 func (o *CliOptions) newTargetCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "target [kind]/[--from-image <image>][--name <name>][--source <name>...][--eventTypes <type>...]",
+		Use:   "target [kind]/[--from-image <image>][--name <name>][--source <name>...][--eventTypes <type>...][--uri <uri>]",
 		Short: "Create TriggerMesh target. More information at https://docs.triggermesh.io",
 		Example: `tmctl create target http \
 	--endpoint https://image-charts.com \
@@ -197,6 +197,7 @@ func (o *CliOptions) updateTriggers(target triggermesh.Component) error {
 
 func (o *CliOptions) targetFromImage(name, image string, params map[string]string, eventSourcesFilter, eventTypesFilter []string) error {
 	ctx := context.Background()
+	fmt.Println("kkkkkkk---------------------")
 
 	et, err := o.translateEventSource(eventSourcesFilter)
 	if err != nil {

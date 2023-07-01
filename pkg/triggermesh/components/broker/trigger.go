@@ -101,6 +101,7 @@ func (t *Trigger) SetSpec(spec map[string]interface{}) {
 }
 
 func NewTrigger(name, broker, configBase string, target triggermesh.Component, filter *eventingbroker.Filter) (triggermesh.Component, error) {
+	fmt.Println("Hello")
 	trigger := &Trigger{
 		Name:       name,
 		ConfigBase: configBase,
@@ -121,11 +122,20 @@ func NewTrigger(name, broker, configBase string, target triggermesh.Component, f
 	}
 
 	if target != nil {
+		// fmt.Println("////////////////////////////")
+		// fmt.Println(target.GetSpec())
+		var uri string
+		spec := target.GetSpec()
+		_, ok := spec["URI"]
+		if ok {
+			uri = spec["URI"].(string)
+		}
+
 		targetPort, err := target.(triggermesh.Consumer).GetPort(context.Background())
 		if err != nil {
 			return nil, fmt.Errorf("target local port: %w", err)
 		}
-		trigger.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s", dockerHost, targetPort))
+		trigger.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s%s", dockerHost, targetPort, uri))
 		if err != nil {
 			return nil, fmt.Errorf("target local URL: %w", err)
 		}
@@ -137,6 +147,8 @@ func NewTrigger(name, broker, configBase string, target triggermesh.Component, f
 			},
 		}
 	}
+
+	fmt.Println("in NewTrigger()", trigger.LocalURL)
 
 	if filter != nil {
 		trigger.Filters = []eventingbroker.Filter{*filter}
@@ -152,6 +164,8 @@ func (t *Trigger) SetTarget(target triggermesh.Component) {
 			APIVersion: target.GetAPIVersion(),
 		},
 	}
+	spec := t.GetSpec()
+	fmt.Println("----------------------------------------------njknbibibhbhb", spec)
 	if consumer, ok := target.(triggermesh.Consumer); ok {
 		port, err := consumer.GetPort(context.Background())
 		if err != nil {

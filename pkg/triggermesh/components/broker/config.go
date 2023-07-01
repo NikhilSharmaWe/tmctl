@@ -74,6 +74,7 @@ func (t *Trigger) WriteLocalConfig() error {
 			URL:       t.LocalURL.String(),
 			Component: t.Target.Ref.Name,
 		}
+		fmt.Println("in WriteLocalConfig 1. trigger.Target.URL 2. t.LocalURL.String()", trigger.Target.URL, t.LocalURL.String())
 		configuration.Triggers[t.Name] = trigger
 	} else {
 		if configuration.Triggers == nil {
