@@ -136,6 +136,15 @@ func NewTrigger(name, broker, configBase string, target triggermesh.Component, f
 				APIVersion: target.GetAPIVersion(),
 			},
 		}
+
+		spec := target.GetSpec()
+		if u, ok := spec["URI"].(string); ok {
+			uri, err := apis.ParseURL(u)
+			if err != nil {
+				return nil, fmt.Errorf("target uri: %w", err)
+			}
+			trigger.Target.URI = uri
+		}
 	}
 
 	if filter != nil {
@@ -152,6 +161,15 @@ func (t *Trigger) SetTarget(target triggermesh.Component) {
 			APIVersion: target.GetAPIVersion(),
 		},
 	}
+	spec := target.GetSpec()
+	if u, ok := spec["URI"].(string); ok {
+		uri, err := apis.ParseURL(u)
+		if err != nil {
+			return
+		}
+		t.Target.URI = uri
+	}
+
 	if consumer, ok := target.(triggermesh.Consumer); ok {
 		port, err := consumer.GetPort(context.Background())
 		if err != nil {
