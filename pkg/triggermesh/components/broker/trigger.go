@@ -121,11 +121,17 @@ func NewTrigger(name, broker, configBase string, target triggermesh.Component, f
 	}
 
 	if target != nil {
+		var u string
+		spec := target.GetSpec()
+		if _, ok := spec["URI"]; ok {
+			u = spec["URI"].(string)
+		}
+
 		targetPort, err := target.(triggermesh.Consumer).GetPort(context.Background())
 		if err != nil {
 			return nil, fmt.Errorf("target local port: %w", err)
 		}
-		trigger.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s", dockerHost, targetPort))
+		trigger.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s%s", dockerHost, targetPort, u))
 		if err != nil {
 			return nil, fmt.Errorf("target local URL: %w", err)
 		}
@@ -157,7 +163,12 @@ func (t *Trigger) SetTarget(target triggermesh.Component) {
 		if err != nil {
 			return
 		}
-		t.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s", dockerHost, port))
+		var u string
+		spec := target.GetSpec()
+		if _, ok := spec["URI"]; ok {
+			u = spec["URI"].(string)
+		}
+		t.LocalURL, err = apis.ParseURL(fmt.Sprintf("%s:%s%s", dockerHost, port, u))
 		if err != nil {
 			return
 		}
